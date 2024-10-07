@@ -19,12 +19,30 @@ class _HomeState extends State<Home> {
         body:
             ListView(
               children: [
-                ListTile(title: Text("1")),
-                ListTile(title: Text("2")),
-                ListTile(title: Text("2340"))
+                ListTile(
+                    title: Text("Story 1"),
+                    subtitle: Text(
+                        "character1, character2, ..." ,
+                        style: Theme.of(context).textTheme.labelSmall
+                    ),
+                    trailing: Icon(Icons.play_arrow),
+                ),
+                ListTile(
+                  title: Text("Story 2"),
+                  subtitle: Text(
+                      "character1, character2, ..." ,
+                      style: Theme.of(context).textTheme.labelSmall
+                  ),
+                  trailing: Icon(Icons.play_arrow),
+                ),
+                ListTile(
+                  title: Center(child: IconButton(
+                    onPressed: (){},
+                    icon: Icon(Icons.add),
+                  ))
+                )
               ],
             ),
-      bottomNavigationBar: TextButton(onPressed: (){}, child: Text("new")),
         );
   }
 }
