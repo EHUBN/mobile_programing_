@@ -68,7 +68,7 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(8),
-                        color: Colors.grey[200],
+                        color: Colors.white,
                       ),
 
                       child: Text(
