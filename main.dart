@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:group_project/home.dart';
-import 'package:group_project/make_story.dart';
-import 'package:group_project/story_choice.dart';
+import 'package:group_project/story_setting.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,10 +11,21 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'Flutter Demo',
-      home: Home(),
+      title: 'Story Setting',
+      home: StorySetting(),
     );
   }
+}
+
+class Story {
+  String title = '';
+  List<Character> characterList = [];
+  List<String> backgroundList = [];
+}
+
+class Character {
+  String name = '';
+  List<String> tags = [];
 }
 
 
