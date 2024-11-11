@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:group_project/story_setting.dart';
+import 'package:group_project/LayoutDrawer.dart';
 
 class LandingSceneDemo extends StatefulWidget {
   const LandingSceneDemo({super.key});
@@ -11,8 +12,9 @@ class LandingSceneDemo extends StatefulWidget {
 class _LandingSceneDemoState extends State<LandingSceneDemo> {
   String selectedStoryTitle = "스토리를 선택하세요";
   String selectedStoryContent = "";
-  List<Map<String, String>> stories = [];  
-  
+  List<Map<String, String>> stories = [];  // 빈 리스트로 초기화
+
+  // Story 설정을 업데이트할 콜백 함수
   void updateStory(String title, String content) {
     setState(() {
       selectedStoryTitle = title;
@@ -99,7 +101,7 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () {
-                
+                // StorySetting 페이지로 이동할 때 updateStory 콜백 전달
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -117,12 +119,4 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
 }
 
 
-// LayoutDrawer 위젯
-class LayoutDrawer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-
-    );
-  }
-}
+// LayoutDrawer 위젯 정의
