@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:group_project/make_story.dart';
 import 'package:group_project/page_3.dart';
 import 'main.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 
 
@@ -297,7 +299,7 @@ class _AddCharacterState extends State<AddCharacter> {
     );
   }
 
-  void _addTag() {
+  void _addTag() async {
     if (widget.ch.tags.length >= 5) {
       showDialog(
           context: context,
@@ -308,52 +310,41 @@ class _AddCharacterState extends State<AddCharacter> {
       );
       return;
     }
-    showDialog(
+    String? tempTag = await showDialog(
         context: context,
-        builder: (BuildContext) => AlertDialog(
-            content: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: 150.0,
-                child: Column(
-                  children: [
-                    const Text("Type a tag for your character"),
-                    _tagField(),
-                    const SizedBox(height: 5.0),
-                    Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextButton(
-                              onPressed: () => _saveTag(context),
-                              child: const Text("save")
-                          ),
-                          TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text("cancel")
-                          ),
-                        ]
-                    )
-                  ],
-                )
-            )
-        )
+        builder: (BuildContext) => AddTag(ch: widget.ch)
     );
+    if (tempTag != null){
+      setState(() => widget.ch.tags.add(tempTag));
+    }
+
   }
+}
+
+class AddTag extends StatelessWidget {
+  final Character ch;
+  late String tempTag;
+  late String tag;
+  bool isFit = true;
+  AddTag({super.key, required this.ch});
+
+  final GlobalKey<FormState> _tagKey = GlobalKey<FormState>();
 
   Widget _tagField() {
     return Form(
       key: _tagKey,
       child: TextFormField(
-        onSaved: (input) => setState(() {
-          widget.ch.tags.add(input!);
-        }),
+        onSaved: (input) => tag = input!,
+        onChanged: (input) => tempTag = input,
         validator: (input) {
+
           if (input!.isEmpty) {
             return "Tag cannot be empty";
           } else if (input.length > 15) {
             return "Tag is too long";
-          } else if (widget.ch.tags.contains(input)) {
+          } else if (ch.tags.contains(input)) {
             return "Duplicate Tags not allowed";
-          } else if (!_isFit(input)) {
+          } else if (!isFit) {
             return "Choose more appropriate tag";
           } else {
             return null;
@@ -366,18 +357,91 @@ class _AddCharacterState extends State<AddCharacter> {
     );
   }
 
-  void _saveTag(BuildContext context) {
+  void _saveTag(BuildContext context) async {
     if (_tagKey.currentState!.validate()) {
-      _tagKey.currentState!.save();
-      Navigator.pop(context);
+      isFit = await _aiCheck(tempTag);
+      if(_tagKey.currentState!.validate()) {
+        _tagKey.currentState!.save();
+        Navigator.pop(context, tag);
+      }
+      isFit = true;
     }
   }
 
-  bool _isFit(String input) {
-    return true;
+  Future<bool> _aiCheck(String input) async{
+    late http.Response httpResponse;
+
+    try {
+      httpResponse = await http.post(Uri.parse(uri),
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            "model": "llama3-8b-8192",
+            "messages": [
+              {
+                "role": "user",
+                "content": "Is keyword '${input}' appropriate for fairytale character's feature? "
+              },
+              {
+                "role": "system",
+                "content": "You should only answer 'y' or 'n'."
+              }
+            ]
+          })
+      );
+    } catch (e) {
+      print(e);
+    }
+    if (httpResponse.statusCode == 200){
+      try {
+        var data = jsonDecode(httpResponse.body);
+        String output = data['choices'][0]['message']['content'];
+        if (output == 'y') {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (e) {
+        print(e);
+      }
+    } else {
+      print(httpResponse.statusCode);
+    }
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+        content: SizedBox(
+            width: MediaQuery.of(context).size.width,
+            height: 150.0,
+            child: Column(
+              children: [
+                const Text("Type a tag for your character"),
+                _tagField(),
+                const SizedBox(height: 5.0),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                          onPressed: () => _saveTag(context),
+                          child: const Text("save")
+                      ),
+                      TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("cancel")
+                      ),
+                    ]
+                )
+              ],
+            )
+        )
+    );
   }
 }
-
 
 class AddBackground extends StatelessWidget {
   final Story story;
