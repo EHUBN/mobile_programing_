@@ -253,6 +253,9 @@ class _AddCharacterState extends State<AddCharacter> {
               if(input.length > 15){
                 return "Name is too long";
               }
+              if(input[0] != input[0].toUpperCase()){
+                return "Name should start with upper case";
+              }
               for (Character tempCh in widget.story.characterList) {
                 if (input == tempCh.name) {
                   return "Same name are not allowed";
