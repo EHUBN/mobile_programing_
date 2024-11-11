@@ -1,15 +1,12 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:group_project/make_story.dart';
-import 'package:group_project/page_3.dart';
+import 'package:group_project/story.dart';
 import 'main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 
-
 class StorySetting extends StatefulWidget {
-  final Function(String title, String content) updateStory;
+  final Function(Story story) updateStory;
 
   const StorySetting({super.key, required this.updateStory});
 
@@ -19,88 +16,79 @@ class StorySetting extends StatefulWidget {
 
 class _StorySettingState extends State<StorySetting> {
   Story story = Story();
+
   final GlobalKey<FormState> _titleKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: const Text("Story Setting"),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("  Title"),
-          _titleField(),
-          const Text("  Characters"),
-          const SizedBox(height: 15.0),
-          Expanded(child: _showCharacters()),
-          const Text("  Backgrounds"),
-          const SizedBox(height: 15.0),
-          Expanded(child: _showBackgrounds()),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(
+          title: const Text("Story Setting"),
+        ),
+        body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextButton(
-                  onPressed: () => _checkTitle(context),
-                  child: const Text("save")),
-              TextButton(
-                  onPressed: () => _goBack(context),
-                  child: const Text("cancel")),
-            ],
-          ),
-        ],
-      ),
+              const Text("  Title"),
+              _titleField(),
+              const Text("  Characters"),
+              const SizedBox(height: 15.0),
+              Expanded(child: _showCharacters()),
+              const Text("  Backgrounds"),
+              const SizedBox(height: 15.0),
+              Expanded(child: _showBackgrounds()),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                    TextButton(
+                      onPressed: () => _checkTitle(context),
+                      child: const Text("save")
+                    ),
+                    TextButton(
+                      onPressed: (){},
+                      child: const Text("cancel")
+                    ),
+                ],
+            )
+          ]
+        )
     );
   }
 
-  void _checkTitle(BuildContext context) {
-    if (_titleKey.currentState!.validate()) {
-      _titleKey.currentState!.save();
-
-      // Story 데이터를 updateStory 콜백을 통해 전달
-
-      widget.updateStory(story.title, "내용");
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const MyApp1()),
-      );
-    }
-  }
-
-  void _goBack(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => LandingSceneDemo()),
-    );
-  }
-
-  Widget _titleField() {
+  Widget _titleField(){
     return Container(
       padding: const EdgeInsets.all(15.0),
       child: Form(
-        key: _titleKey,
-        child: TextFormField(
-          onSaved: (input) => story.title = input!,
-          validator: (input) {
-            if (input!.isEmpty) {
-              return "Title cannot be empty";
-            } else if (input.length > 40) {
-              return "Title is too long";
-            } else {
-              return null;
-            }
-          },
-          decoration: const InputDecoration(border: OutlineInputBorder()),
-        ),
+          key: _titleKey,
+          child: TextFormField(
+            onSaved: (input) => story.title = input!,
+            validator: (input) {
+              if(input!.isEmpty){
+                return "Title cannot be empty";
+              } else if(input.length > 40) {
+                return "Title is too long";
+              } else {
+                return null;
+              }
+            },
+            decoration: const InputDecoration(
+              border: OutlineInputBorder()
+            ),
+          )
       ),
     );
   }
 
-
-
+  void _checkTitle(BuildContext context){
+    if(_titleKey.currentState!.validate()){
+      _titleKey.currentState!.save();
+      widget.updateStory(story);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => StoryPage(story: story)),
+      );
+    }
+  }
 
   void _addCharacter() async {
     if (story.characterList.length >= 3) {
@@ -114,12 +102,13 @@ class _StorySettingState extends State<StorySetting> {
           });
       return;
     }else {
-      final Character? ch = await showDialog(
+      final Character? tempCh = await showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (BuildContext) => AddCharacter(story: story, ch: Character())
       );
-      if(ch != null){
-        setState(() => story.characterList.add(ch));
+      if(tempCh != null){
+        setState(() => story.characterList.add(tempCh));
       }
     }
   }
@@ -209,8 +198,13 @@ class AddCharacter extends StatefulWidget {
 
 class _AddCharacterState extends State<AddCharacter> {
   final GlobalKey<FormState> _nameKey = GlobalKey<FormState>();
-  final GlobalKey<FormState> _tagKey = GlobalKey<FormState>();
+  late Character tempCh;
 
+  @override
+  void initState(){
+    super.initState();
+    tempCh = Character.withParams(widget.ch);
+  }
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -228,7 +222,6 @@ class _AddCharacterState extends State<AddCharacter> {
                 children: [
                   TextButton(
                       onPressed: () => _saveName(context),
-
                       child: const Text("save")),
                   TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -246,8 +239,8 @@ class _AddCharacterState extends State<AddCharacter> {
       child: Form(
           key: _nameKey,
           child: TextFormField(
-            initialValue: widget.ch.name,
-            onSaved: (input) => widget.ch.name = input!,
+            initialValue: tempCh.name,
+            onSaved: (input) => tempCh.name = input!,
             validator: (input) {
               if(input!.isEmpty){
                 return "Name cannot be empty";
@@ -276,12 +269,12 @@ class _AddCharacterState extends State<AddCharacter> {
   void _saveName(BuildContext context){
     if (_nameKey.currentState!.validate()) {
       _nameKey.currentState!.save();
-      Navigator.pop(context, widget.ch);
+      Navigator.pop(context, tempCh);
     }
   }
 
   Widget _showTags() {
-    var widgets = widget.ch.tags.map((tag) => _tagWidget(tag)).toList();
+    var widgets = tempCh.tags.map((tag) => _tagWidget(tag)).toList();
     widgets.add(
         IconButton(onPressed: () => _addTag(), icon: const Icon(Icons.add)));
     return ListView(children: widgets);
@@ -292,7 +285,7 @@ class _AddCharacterState extends State<AddCharacter> {
         title: Text(tag),
         trailing: IconButton(
           onPressed: () => setState(() {
-            widget.ch.tags.remove(tag);
+            tempCh.tags.remove(tag);
           }),
           icon: const Icon(Icons.delete),
         )
@@ -300,7 +293,7 @@ class _AddCharacterState extends State<AddCharacter> {
   }
 
   void _addTag() async {
-    if (widget.ch.tags.length >= 5) {
+    if (tempCh.tags.length >= 5) {
       showDialog(
           context: context,
           builder: (BuildContext) => const AlertDialog(
@@ -311,13 +304,13 @@ class _AddCharacterState extends State<AddCharacter> {
       return;
     }
     String? tempTag = await showDialog(
+        barrierDismissible: false,
         context: context,
-        builder: (BuildContext) => AddTag(ch: widget.ch)
+        builder: (BuildContext) => AddTag(ch: tempCh)
     );
     if (tempTag != null){
-      setState(() => widget.ch.tags.add(tempTag));
+      setState(() => tempCh.tags.add(tempTag));
     }
-
   }
 }
 
@@ -327,6 +320,7 @@ class AddTag extends StatelessWidget {
   late String tag;
   bool isFit = true;
   AddTag({super.key, required this.ch});
+  bool buttonEnable = true;
 
   final GlobalKey<FormState> _tagKey = GlobalKey<FormState>();
 
@@ -357,7 +351,7 @@ class AddTag extends StatelessWidget {
     );
   }
 
-  void _saveTag(BuildContext context) async {
+  void _saveTag(context) async {
     if (_tagKey.currentState!.validate()) {
       isFit = await _aiCheck(tempTag);
       if(_tagKey.currentState!.validate()) {
@@ -370,8 +364,8 @@ class AddTag extends StatelessWidget {
 
   Future<bool> _aiCheck(String input) async{
     late http.Response httpResponse;
-
     try {
+      buttonEnable = false;
       httpResponse = await http.post(Uri.parse(uri),
           headers: {
             'Authorization': 'Bearer $apiKey',
@@ -382,7 +376,7 @@ class AddTag extends StatelessWidget {
             "messages": [
               {
                 "role": "user",
-                "content": "Is keyword '${input}' appropriate for fairytale character's feature? "
+                "content":  "Is word '${input}' suitable for describing fictional story book's character?"
               },
               {
                 "role": "system",
@@ -398,6 +392,7 @@ class AddTag extends StatelessWidget {
       try {
         var data = jsonDecode(httpResponse.body);
         String output = data['choices'][0]['message']['content'];
+        print(output);
         if (output == 'y') {
           return true;
         } else {
@@ -405,8 +400,11 @@ class AddTag extends StatelessWidget {
         }
       } catch (e) {
         print(e);
+      } finally {
+        buttonEnable = true;
       }
     } else {
+      buttonEnable = true;
       print(httpResponse.statusCode);
     }
     return false;
@@ -431,7 +429,11 @@ class AddTag extends StatelessWidget {
                           child: const Text("save")
                       ),
                       TextButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () {
+                            if(buttonEnable){
+                              Navigator.pop(context);
+                            }
+                          },
                           child: const Text("cancel")
                       ),
                     ]
@@ -443,10 +445,15 @@ class AddTag extends StatelessWidget {
   }
 }
 
+
 class AddBackground extends StatelessWidget {
   final Story story;
-  final GlobalKey<FormState> _bgKey = GlobalKey<FormState>();
+  late String tempBg;
   late String bg;
+  bool isFit = true;
+  bool buttonEnabled = true;
+
+  final GlobalKey<FormState> _bgKey = GlobalKey<FormState>();
 
   AddBackground({super.key, required this.story});
 
@@ -469,7 +476,10 @@ class AddBackground extends StatelessWidget {
                           child: const Text("save")
                       ),
                       TextButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () {
+                            if(buttonEnabled){
+                              Navigator.pop(context);
+                            }},
                           child: const Text("cancel")
                       ),
                     ])
@@ -479,10 +489,14 @@ class AddBackground extends StatelessWidget {
     );
   }
 
-  void _saveBg(BuildContext context) {
+  void _saveBg(context) async {
     if (_bgKey.currentState!.validate()) {
-      _bgKey.currentState!.save();
-      Navigator.pop(context, bg);
+      isFit = await _aiCheck(tempBg);
+      if(_bgKey.currentState!.validate()) {
+        _bgKey.currentState!.save();
+        Navigator.pop(context, bg);
+      }
+      isFit = true;
     }
   }
 
@@ -491,6 +505,7 @@ class AddBackground extends StatelessWidget {
       key: _bgKey,
       child: TextFormField(
         onSaved: (input) => bg = input!,
+        onChanged: (input) => tempBg = input,
         validator: (input) {
           if (input!.isEmpty) {
             return "Tag cannot be Empty";
@@ -498,7 +513,7 @@ class AddBackground extends StatelessWidget {
             return "Tag is too long";
           } else if (story.backgroundList.contains(input)) {
             return "Duplicate Tags not allowed";
-          } else if (!_isFit(input)) {
+          } else if (!isFit) {
             return "Choose more appropriate tag";
           } else {
             return null;
@@ -511,8 +526,51 @@ class AddBackground extends StatelessWidget {
     );
   }
 
-  bool _isFit(String input) {
-    return true;
+  Future<bool> _aiCheck(String input) async{
+    late http.Response httpResponse;
+    try {
+      buttonEnabled = false;
+      httpResponse = await http.post(Uri.parse(uri),
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            "model": "llama3-8b-8192",
+            "messages": [
+              {
+                "role": "user",
+                "content": "Is word '${input}' suitable for describing fictional story book's background "
+              },
+              {
+                "role": "system",
+                "content": "You should only answer 'y' or 'n'."
+              }
+            ]
+          })
+      );
+    } catch (e) {
+      print(e);
+    }
+    if (httpResponse.statusCode == 200){
+      try {
+        var data = jsonDecode(httpResponse.body);
+        String output = data['choices'][0]['message']['content'];
+        print(output);
+        if (output == 'y') {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (e) {
+        print(e);
+      } finally {
+        buttonEnabled = true;
+      }
+    } else {
+      buttonEnabled = true;
+      print(httpResponse.statusCode);
+    }
+    return false;
   }
-
 }
