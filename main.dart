@@ -29,4 +29,9 @@ class Story {
 class Character {
   String name = '';
   List<String> tags = [];
+  Character(){}
+  Character.withParams(Character ch){
+    this.name = ch.name;
+    this.tags = List.from(ch.tags);
+  }
 }
