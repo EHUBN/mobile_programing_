@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:group_project/story_setting.dart';
 import 'package:group_project/LayoutDrawer.dart';
 
+import 'main.dart';
+
 class LandingSceneDemo extends StatefulWidget {
   const LandingSceneDemo({super.key});
 
@@ -12,17 +14,14 @@ class LandingSceneDemo extends StatefulWidget {
 class _LandingSceneDemoState extends State<LandingSceneDemo> {
   String selectedStoryTitle = "스토리를 선택하세요";
   String selectedStoryContent = "";
-  List<Map<String, String>> stories = [];  // 빈 리스트로 초기화
+  List<Story> stories = [];  // 빈 리스트로 초기화
 
   // Story 설정을 업데이트할 콜백 함수
-  void updateStory(String title, String content) {
+  void updateStory(Story story) {
     setState(() {
-      selectedStoryTitle = title;
-      selectedStoryContent = content;
-      stories.add({
-        "title": title,
-        "content": content,
-      });
+      stories.add(story);
+      selectedStoryTitle = story.title;
+
     });
   }
 
@@ -44,8 +43,8 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
                 return GestureDetector(
                   onTap: () {
                     setState(() {
-                      selectedStoryTitle = stories[index]['title']!;
-                      selectedStoryContent = stories[index]['content']!;
+                      selectedStoryTitle = stories[index].title;
+                      selectedStoryContent = stories[index].title;
                     });
                   },
                   child: Container(
@@ -57,7 +56,7 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
                     ),
                     child: Center(
                       child: Text(
-                        stories[index]['title']!,
+                        stories[index].title,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -117,6 +116,3 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
     );
   }
 }
-
-
-// LayoutDrawer 위젯 정의
