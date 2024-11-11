@@ -8,14 +8,14 @@ const apiKey = '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';
 const uri = 'https://api.groq.com/openai/v1/chat/completions';
 
 class MyApp1 extends StatefulWidget {
-  const MyApp1({super.key});
+  final Story story;
+  const MyApp1({super.key, required this.story});
 
   @override
   State<MyApp1> createState() => _MyApp1State();
 }
 
 class _MyApp1State extends State<MyApp1> {
-  final story = Story();
   final List<Character> characterList = [
     Character()..name = "Mia"..tags = ["young", "girl", "strong"],
     Character()..name = "Max"..tags = ["evil", "smart"],
@@ -33,8 +33,6 @@ class _MyApp1State extends State<MyApp1> {
   @override
   void initState() {
     super.initState();
-    story.characterList = characterList;
-    story.backgroundList = backgroundList;
     for (int i = 0; i < length; ++i) {
       if (i == 0) {
         roleList.add("Make the beginning part of the story.");
@@ -97,13 +95,13 @@ class _MyApp1State extends State<MyApp1> {
 
   Future<http.Response> _makeStory(String role) {
     String characterStr = 'Characters are ';
-    for (Character ch in story.characterList) {
+    for (Character ch in widget.story.characterList) {
       characterStr =
       "$characterStr'${ch.name}' whose attributes are '${ch.tags.join(", ")}' and ";
     }
     characterStr = "${characterStr}it's all.";
     String backgroundStr =
-        "Background attributes of the stroies are '${story.backgroundList.join(", ")}'.";
+        "Background attributes of the stroies are '${widget.story.backgroundList.join(", ")}'.";
     final historyStr = historyList.join(' ');
 
     return http.post(Uri.parse(uri),
