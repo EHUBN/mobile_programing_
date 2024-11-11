@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:group_project/story_setting.dart';
 
 class LandingSceneDemo extends StatefulWidget {
+  const LandingSceneDemo({super.key});
+
   @override
   _LandingSceneDemoState createState() => _LandingSceneDemoState();
 }
@@ -8,7 +11,18 @@ class LandingSceneDemo extends StatefulWidget {
 class _LandingSceneDemoState extends State<LandingSceneDemo> {
   String selectedStoryTitle = "스토리를 선택하세요";
   String selectedStoryContent = "";
-  List<Map<String, String>> stories = [];
+  List<Map<String, String>> stories = [];  
+  
+  void updateStory(String title, String content) {
+    setState(() {
+      selectedStoryTitle = title;
+      selectedStoryContent = content;
+      stories.add({
+        "title": title,
+        "content": content,
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +85,6 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
                         borderRadius: BorderRadius.circular(8),
                         color: Colors.white,
                       ),
-
                       child: Text(
                         selectedStoryContent,
                         style: TextStyle(fontSize: 18),
@@ -86,33 +99,30 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () {
-                setState(() {
-                  int newStoryIndex = stories.length + 1;
-                  stories.add({
-                    "title": "Story $newStoryIndex",
-                    "content": "내용 $newStoryIndex.", // 뒤에서 추가
-                  });
-                  selectedStoryTitle = "Story $newStoryIndex";
-                  selectedStoryContent = "내용 $newStoryIndex."; // 추가 해야됨
-                });
+                
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StorySetting(updateStory: updateStory),
+                  ),
+                );
               },
               child: Text("스토리 만들기"),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark),
-            label: 'Questions',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
-        ],
-      ),
+    );
+  }
+}
+
+
+// LayoutDrawer 위젯
+class LayoutDrawer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+
     );
   }
 }
