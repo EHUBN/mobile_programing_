@@ -1,9 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:group_project/make_story.dart';
+import 'package:group_project/page_3.dart';
 import 'main.dart';
 
 
+
 class StorySetting extends StatefulWidget {
-  const StorySetting({super.key});
+  final Function(String title, String content) updateStory;
+
+  const StorySetting({super.key, required this.updateStory});
 
   @override
   State<StorySetting> createState() => _StorySettingState();
@@ -11,74 +17,88 @@ class StorySetting extends StatefulWidget {
 
 class _StorySettingState extends State<StorySetting> {
   Story story = Story();
-
   final GlobalKey<FormState> _titleKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: const Text("Story Setting"),
-        ),
-        body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: const Text("Story Setting"),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("  Title"),
+          _titleField(),
+          const Text("  Characters"),
+          const SizedBox(height: 15.0),
+          Expanded(child: _showCharacters()),
+          const Text("  Backgrounds"),
+          const SizedBox(height: 15.0),
+          Expanded(child: _showBackgrounds()),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("  Title"),
-              _titleField(),
-              const Text("  Characters"),
-              const SizedBox(height: 15.0),
-              Expanded(child: _showCharacters()),
-              const Text("  Backgrounds"),
-              const SizedBox(height: 15.0),
-              Expanded(child: _showBackgrounds()),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                    TextButton(
-                      onPressed: () => _checkTitle(context),
-                      child: const Text("save")
-                    ),
-                    TextButton(
-                      onPressed: (){},
-                      child: const Text("cancel")
-                    ),
-                ],
-            )
-          ]
-        )
-    );
-  }
-
-  void _checkTitle(BuildContext context){
-    if(_titleKey.currentState!.validate()){
-      _titleKey.currentState!.save();
-    }
-  }
-
-  Widget _titleField(){
-    return Container(
-      padding: const EdgeInsets.all(15.0),
-      child: Form(
-          key: _titleKey,
-          child: TextFormField(
-            onSaved: (input) => story.title = input!,
-            validator: (input) {
-              if(input!.isEmpty){
-                return "Title cannot be empty";
-              } else if(input.length > 40) {
-                return "Title is too long";
-              } else {
-                return null;
-              }
-            },
-            decoration: const InputDecoration(
-              border: OutlineInputBorder()
-            ),
-          )
+              TextButton(
+                  onPressed: () => _checkTitle(context),
+                  child: const Text("save")),
+              TextButton(
+                  onPressed: () => _goBack(context),
+                  child: const Text("cancel")),
+            ],
+          ),
+        ],
       ),
     );
   }
+
+  void _checkTitle(BuildContext context) {
+    if (_titleKey.currentState!.validate()) {
+      _titleKey.currentState!.save();
+
+      // Story 데이터를 updateStory 콜백을 통해 전달
+
+      widget.updateStory(story.title, "내용");
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MyApp1()),
+      );
+    }
+  }
+
+  void _goBack(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => LandingSceneDemo()),
+    );
+  }
+
+  Widget _titleField() {
+    return Container(
+      padding: const EdgeInsets.all(15.0),
+      child: Form(
+        key: _titleKey,
+        child: TextFormField(
+          onSaved: (input) => story.title = input!,
+          validator: (input) {
+            if (input!.isEmpty) {
+              return "Title cannot be empty";
+            } else if (input.length > 40) {
+              return "Title is too long";
+            } else {
+              return null;
+            }
+          },
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+        ),
+      ),
+    );
+  }
+
+
+
 
   void _addCharacter() async {
     if (story.characterList.length >= 3) {
@@ -206,6 +226,7 @@ class _AddCharacterState extends State<AddCharacter> {
                 children: [
                   TextButton(
                       onPressed: () => _saveName(context),
+
                       child: const Text("save")),
                   TextButton(
                       onPressed: () => Navigator.pop(context),
