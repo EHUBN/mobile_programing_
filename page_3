@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
+import 'make_story.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp1 extends StatelessWidget {
+  const MyApp1({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +39,8 @@ class MyApp extends StatelessWidget {
                   Container(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                    'option 1:',
-                  ),
+                      'option 1:',
+                    ),
                   ),
 
                   SizedBox(height: 10.0),
@@ -55,19 +52,20 @@ class MyApp extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 20.0), 
+              SizedBox(height: 20.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      
+
                     },
                     child: Text('option 1'),
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      
+                      Navigator.pop(context);
+                      Navigator.pop(context);
                     },
                     child: Text('option 2'),
                   ),
