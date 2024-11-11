@@ -318,12 +318,13 @@ class AddTag extends StatelessWidget {
   final Character ch;
   late String tempTag;
   late String tag;
-  bool isFit = true;
-  AddTag({super.key, required this.ch});
-  bool buttonEnable = true;
+  bool _isFit = true;
+  bool _buttonEnabled = true;
 
   final GlobalKey<FormState> _tagKey = GlobalKey<FormState>();
 
+  AddTag({super.key, required this.ch});
+  
   Widget _tagField() {
     return Form(
       key: _tagKey,
@@ -338,7 +339,7 @@ class AddTag extends StatelessWidget {
             return "Tag is too long";
           } else if (ch.tags.contains(input)) {
             return "Duplicate Tags not allowed";
-          } else if (!isFit) {
+          } else if (!_isFit) {
             return "Choose more appropriate tag";
           } else {
             return null;
@@ -353,19 +354,19 @@ class AddTag extends StatelessWidget {
 
   void _saveTag(context) async {
     if (_tagKey.currentState!.validate()) {
-      isFit = await _aiCheck(tempTag);
+      _isFit = await _aiCheck(tempTag);
       if(_tagKey.currentState!.validate()) {
         _tagKey.currentState!.save();
         Navigator.pop(context, tag);
       }
-      isFit = true;
+      _isFit = true;
     }
   }
 
   Future<bool> _aiCheck(String input) async{
     late http.Response httpResponse;
     try {
-      buttonEnable = false;
+      _buttonEnabled = false;
       httpResponse = await http.post(Uri.parse(uri),
           headers: {
             'Authorization': 'Bearer $apiKey',
@@ -401,10 +402,10 @@ class AddTag extends StatelessWidget {
       } catch (e) {
         print(e);
       } finally {
-        buttonEnable = true;
+        _buttonEnabled = true;
       }
     } else {
-      buttonEnable = true;
+      _buttonEnabled = true;
       print(httpResponse.statusCode);
     }
     return false;
@@ -430,7 +431,7 @@ class AddTag extends StatelessWidget {
                       ),
                       TextButton(
                           onPressed: () {
-                            if(buttonEnable){
+                            if(_buttonEnabled){
                               Navigator.pop(context);
                             }
                           },
@@ -450,8 +451,8 @@ class AddBackground extends StatelessWidget {
   final Story story;
   late String tempBg;
   late String bg;
-  bool isFit = true;
-  bool buttonEnabled = true;
+  bool _isFit = true;
+  bool _buttonEnabled = true;
 
   final GlobalKey<FormState> _bgKey = GlobalKey<FormState>();
 
@@ -477,7 +478,7 @@ class AddBackground extends StatelessWidget {
                       ),
                       TextButton(
                           onPressed: () {
-                            if(buttonEnabled){
+                            if(_buttonEnabled){
                               Navigator.pop(context);
                             }},
                           child: const Text("cancel")
@@ -491,12 +492,12 @@ class AddBackground extends StatelessWidget {
 
   void _saveBg(context) async {
     if (_bgKey.currentState!.validate()) {
-      isFit = await _aiCheck(tempBg);
+      _isFit = await _aiCheck(tempBg);
       if(_bgKey.currentState!.validate()) {
         _bgKey.currentState!.save();
         Navigator.pop(context, bg);
       }
-      isFit = true;
+      _isFit = true;
     }
   }
 
@@ -513,7 +514,7 @@ class AddBackground extends StatelessWidget {
             return "Tag is too long";
           } else if (story.backgroundList.contains(input)) {
             return "Duplicate Tags not allowed";
-          } else if (!isFit) {
+          } else if (!_isFit) {
             return "Choose more appropriate tag";
           } else {
             return null;
@@ -529,7 +530,7 @@ class AddBackground extends StatelessWidget {
   Future<bool> _aiCheck(String input) async{
     late http.Response httpResponse;
     try {
-      buttonEnabled = false;
+      _buttonEnabled = false;
       httpResponse = await http.post(Uri.parse(uri),
           headers: {
             'Authorization': 'Bearer $apiKey',
@@ -565,10 +566,10 @@ class AddBackground extends StatelessWidget {
       } catch (e) {
         print(e);
       } finally {
-        buttonEnabled = true;
+        _buttonEnabled = true;
       }
     } else {
-      buttonEnabled = true;
+      _buttonEnabled = true;
       print(httpResponse.statusCode);
     }
     return false;
