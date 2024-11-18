@@ -2,20 +2,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'main.dart';
-import 'make_story.dart';
 
-const apiKey = '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';
-const uri = 'https://api.groq.com/openai/v1/chat/completions';
-
-class MyApp1 extends StatefulWidget {
+class StoryPage extends StatefulWidget {
   final Story story;
-  const MyApp1({super.key, required this.story});
+  const StoryPage({super.key, required this.story});
 
   @override
-  State<MyApp1> createState() => _MyApp1State();
+  State<StoryPage> createState() => _StoryPageState();
 }
 
-class _MyApp1State extends State<MyApp1> {
+class _StoryPageState extends State<StoryPage> {
   final List<Character> characterList = [
     Character()..name = "Mia"..tags = ["young", "girl", "strong"],
     Character()..name = "Max"..tags = ["evil", "smart"],
