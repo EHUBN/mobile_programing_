@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:group_project/story.dart';
 import 'package:group_project/story_setting.dart';
-
-import 'make_story.dart';
-
 
 void main() {
   runApp(const MyApp());
@@ -15,10 +13,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Story Setting',
-      home: LandingSceneDemo(),
+      home: StorySetting(updateStory: updateStory),
     );
   }
 }
+
+void updateStory(Story story) {}
+
+const apiKey = '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';
+const uri = 'https://api.groq.com/openai/v1/chat/completions';
 
 class Story {
   String title = '';
@@ -35,3 +38,8 @@ class Character {
     this.tags = List.from(ch.tags);
   }
 }
+
+
+
+
+
