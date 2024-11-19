@@ -47,7 +47,7 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
                     width: 120,
                     margin: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.brown[400], // 나무 색상
+                      color: Colors.brown[400],
                       borderRadius: BorderRadius.circular(6),
                       boxShadow: [
                         BoxShadow(
