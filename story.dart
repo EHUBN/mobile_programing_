@@ -5,7 +5,9 @@ import 'main.dart';
 
 class StoryPage extends StatefulWidget {
   final Story story;
-  const StoryPage({super.key, required this.story});
+  final Function(Map<String, dynamic> Text) updatestoryText;
+
+  const StoryPage({super.key, required this.story, required this.updatestoryText});
 
   @override
   State<StoryPage> createState() => _StoryPageState();
@@ -15,7 +17,7 @@ class _StoryPageState extends State<StoryPage> {
   final List<Character> characterList = [
     Character()..name = "Mia"..tags = ["young", "girl", "strong"],
     Character()..name = "Max"..tags = ["evil", "smart"],
-    Character()..name = "Ayano"..tags = ["friendly", "fat"]
+    Character()..name = "Ayano"..tags = ["friendly", "fat"],
   ];
   final List<String> backgroundList = ["future", "dystopia"];
   final List<String> roleList = [];
@@ -26,22 +28,25 @@ class _StoryPageState extends State<StoryPage> {
   int page = 0;
   String storyStr = '';
 
+  late Map<String, dynamic> text;
+
   @override
   void initState() {
     super.initState();
+    text = {'title': widget.story.title, 'story': ''};
+
     for (int i = 0; i < length; ++i) {
       if (i == 0) {
         roleList.add("Make the beginning part of the story.");
       } else if (i == length - 1) {
-        roleList.add(
-            "Make the ending part of the story which has no more options for user.");
+        roleList.add("Make the ending part of the story which has no more options for user.");
       } else {
-        roleList.add(
-            "Make the next part of the story, given the previous stories.");
+        roleList.add("Make the next part of the story, given the previous stories.");
       }
     }
     _initStory();
   }
+
   _initStory() async {
     try {
       httpResponse = await _makeStory(roleList[page]);
@@ -64,8 +69,8 @@ class _StoryPageState extends State<StoryPage> {
   }
 
   void _nextStory(String choice) async {
-    if(page == length){
-      return null;
+    if (page == length) {
+      return;
     }
     history = "${history} The user's choice was ${choice}. ";
     historyList.add(history);
@@ -97,7 +102,7 @@ class _StoryPageState extends State<StoryPage> {
     }
     characterStr = "${characterStr}it's all.";
     String backgroundStr =
-        "Background attributes of the stroies are '${widget.story.backgroundList.join(", ")}'.";
+        "Background attributes of the stories are '${widget.story.backgroundList.join(", ")}'.";
     final historyStr = historyList.join(' ');
 
     return http.post(Uri.parse(uri),
@@ -111,67 +116,77 @@ class _StoryPageState extends State<StoryPage> {
             {
               "role": "user",
               "content":
-              """
-              The previous stories were ${historyStr}.
-              ${role}
-              """
+              "The previous stories were ${historyStr}. ${role}",
             },
             {
               "role": "system",
               "content":
-              """
-              You are a storyteller who creates short interactive fairy tales, and the fairy tale you will create will be divided into parts.
-              You should give two options to user about main character's next action after each parts, and continue the story given the context.
-              ${characterStr}
-              ${backgroundStr}
-              Don't say any words without story.
-              """
-            }
+              "You are a storyteller who creates short interactive fairy tales, and the fairy tale you will create will be divided into parts. "
+                  "You should give two options to user about the main character's next action after each part, and continue the story given the context. "
+                  "${characterStr} ${backgroundStr} Don't say any words without story.",
+            },
           ]
-        })
-    );
+        }));
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Title'),
+        title: Text(widget.story.title),
       ),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: Column(
-          children: [
-            Container(
+      body: Column(
+        children: [
+
+          Expanded(
+            child: Container(
               padding: EdgeInsets.all(15.0),
-              width: 700.0,
-              height: 600.0,
-              alignment: Alignment.center,
+              width: double.infinity,
+              alignment: Alignment.topCenter,
               decoration: BoxDecoration(
                 border: Border.all(
                   color: Colors.black,
                   width: 2.0,
                 ),
               ),
-              child: SingleChildScrollView(child: Text(storyStr)),
+              child: SingleChildScrollView(
+                child: Text(
+                  storyStr,
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.only(bottom: 20.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(
-              onPressed: () => _nextStory('A'),
-              child: Text('option 1'),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () => _nextStory('A'),
+                  child: Text('Option 1'),
+                ),
+                ElevatedButton(
+                  onPressed: () => _nextStory('B'),
+                  child: Text('Option 2'),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () => _nextStory('B'),
-              child: Text('option 2'),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: ElevatedButton(
+              onPressed: () {
+                text['story'] = historyList;
+                widget.updatestoryText(text);
+                Navigator.pop(context);
+              },
+              child: Text('Save'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
