@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:group_project/story.dart';
 import 'main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'make_story.dart';
 
 
 class StorySetting extends StatefulWidget {
@@ -40,17 +40,22 @@ class _StorySettingState extends State<StorySetting> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                    TextButton(
+                  TextButton(
                       onPressed: () => _checkTitle(context),
                       child: const Text("save")
-                    ),
-                    TextButton(
-                      onPressed: (){},
+                  ),
+                  TextButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LandingSceneDemo()),
+                        );
+                      },
                       child: const Text("cancel")
-                    ),
+                  ),
                 ],
-            )
-          ]
+              )
+            ]
         )
     );
   }
@@ -72,7 +77,7 @@ class _StorySettingState extends State<StorySetting> {
               }
             },
             decoration: const InputDecoration(
-              border: OutlineInputBorder()
+                border: OutlineInputBorder()
             ),
           )
       ),
@@ -83,10 +88,8 @@ class _StorySettingState extends State<StorySetting> {
     if(_titleKey.currentState!.validate()){
       _titleKey.currentState!.save();
       widget.updateStory(story);
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => StoryPage(story: story)),
-      );
+
+      Navigator.pop(context);
     }
   }
 
