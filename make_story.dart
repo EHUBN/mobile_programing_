@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'story_setting.dart';
-import 'LayoutDrawer.dart';
+import 'package:group_project/story_setting.dart';
+import 'package:group_project/LayoutDrawer.dart';
+
 import 'main.dart';
 
 class LandingSceneDemo extends StatefulWidget {
@@ -13,11 +13,19 @@ class LandingSceneDemo extends StatefulWidget {
 class _LandingSceneDemoState extends State<LandingSceneDemo> {
   String selectedStoryTitle = "스토리를 선택하세요";
   String selectedStoryContent = "";
-  List<Story> stories = []; 
+  List<Story> stories = [];
+  List<Map<String, dynamic>> storyText = [];
+
   void updateStory(Story story) {
     setState(() {
       stories.add(story);
       selectedStoryTitle = story.title;
+    });
+  }
+
+  void updatestoryText(Map<String, dynamic> text) {
+    setState(() {
+      storyText.add(text);
     });
   }
 
@@ -30,17 +38,17 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
       drawer: LayoutDrawer(),
       body: Column(
         children: [
-          Expanded(
-            flex: 2,
+          SizedBox(
+             height: 300,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: stories.length,
+              itemCount: storyText.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
                   onTap: () {
                     setState(() {
-                      selectedStoryTitle = stories[index].title;
-                      selectedStoryContent = stories[index].title;
+                      selectedStoryTitle = storyText[index]['title']!;
+                      selectedStoryContent = storyText[index]['title']!;
                     });
                   },
                   child: Container(
@@ -112,21 +120,22 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
               },
             ),
           ),
-          Expanded(
-            flex: 3,
-            child: Container(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    selectedStoryTitle,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16),
+
+
+          Container(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  selectedStoryTitle,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                FittedBox(
+                  child: Container(
+                    width: 400,
+                    padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(8),
@@ -137,12 +146,67 @@ class _LandingSceneDemoState extends State<LandingSceneDemo> {
                       style: TextStyle(fontSize: 18),
                     ),
                   ),
-                ],
-              ),
+                )
+              ],
             ),
           ),
+          SizedBox(
+            height: 40,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                  "Templates",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)
+              ),
+            )
+          ),
+
+          Expanded(
+            child: ListView.builder(
+              itemCount: stories.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StoryPage(story: stories[index], updatestoryText: updatestoryText,
+                        ),
+                      ),
+                    );
+                  },
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Title: ${stories[index].title}',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(width: 8,),
+                          ...stories[index].characterList.map((character) {
+                            return Row(
+                              children: [
+                                Text('Character: ${character.name}'),
+                                SizedBox(width: 8,),
+                                Text('tag: ${character.tags.join(", ")}')
+                              ],
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                      Text('Backgrounds: ${stories[index].backgroundList.join(", ")}'),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+
+
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(10),
             child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
