@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:group_project/story.dart';
+import 'package:group_project/make_story.dart';
 import 'package:group_project/story_setting.dart';
 
 void main() {
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Story Setting',
-      home: StorySetting(updateStory: updateStory),
+      home: LandingSceneDemo(),
     );
   }
 }
@@ -38,8 +38,3 @@ class Character {
     this.tags = List.from(ch.tags);
   }
 }
-
-
-
-
-
