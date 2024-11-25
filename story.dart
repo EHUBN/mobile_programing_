@@ -195,8 +195,7 @@ class _StoryPageState extends State<StoryPage> {
         context: context,
         builder: (context){
           return AlertDialog(
-            title: Text('Do you want to exit?'),
-            content: Text('Your settings will not be saved.'),
+            title: Text('Do you want to go back?'),
             actions: [
               TextButton(
                   onPressed:(){
