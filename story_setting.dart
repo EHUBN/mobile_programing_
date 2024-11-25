@@ -25,43 +25,49 @@ class _StorySettingState extends State<StorySetting> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: const Text("Story Setting"),
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: const Text("Story Setting"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            goBack1(context);
+          },
         ),
-        body: SingleChildScrollView(
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("  Title"),
-                _titleField(),
-                const SizedBox(height: 15.0),
-                const Text("  Length of Story"),
-                _radioButtons(),
-                const SizedBox(height: 15.0),
-                const SizedBox(height: 15.0),
-                const Text("  Characters"),
-                const SizedBox(height: 25.0),
-                _showCharacters(),
-                const Text("  Backgrounds"),
-                const SizedBox(height: 25.0),
-                _showBackgrounds(),
-              ],
-          ),
-        ),
-        bottomNavigationBar: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextButton(
-                onPressed: () => _checkTitle(context),
-                child: const Text("save")
-            ),
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("cancel")
-            ),
+            const Text("  Title"),
+            _titleField(),
+            const SizedBox(height: 15.0),
+            const Text("  Length of Story"),
+            _radioButtons(),
+            const SizedBox(height: 15.0),
+            const SizedBox(height: 15.0),
+            const Text("  Characters"),
+            const SizedBox(height: 25.0),
+            _showCharacters(),
+            const Text("  Backgrounds"),
+            const SizedBox(height: 25.0),
+            _showBackgrounds(),
           ],
         ),
+      ),
+      bottomNavigationBar: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextButton(
+              onPressed: () => _checkTitle(context),
+              child: const Text("save")
+          ),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("cancel")
+          ),
+        ],
+      ),
     );
   }
 
@@ -237,6 +243,33 @@ class _StorySettingState extends State<StorySetting> {
           onPressed: () => setState(() => widget.story.backgroundList.remove(bg)),
           icon: const Icon(Icons.delete),
         )
+    );
+  }
+
+  void goBack1(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            title: Text('Do you want to exit?'),
+            content: Text('Your settings will not be saved.'),
+            actions: [
+              TextButton(
+                  onPressed:(){
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: Text('yes')
+              ),
+              TextButton(
+                  onPressed: (){
+                    Navigator.pop(context);
+                  },
+                  child: Text('no')
+              )
+            ],
+          );
+        }
     );
   }
 }
