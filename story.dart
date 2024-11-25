@@ -1,39 +1,35 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'main.dart';
 
 class StoryPage extends StatefulWidget {
   final Story story;
-  final Function(Map<String, dynamic> Text) updatestoryText;
 
-  const StoryPage({super.key, required this.story, required this.updatestoryText});
+  const StoryPage({super.key, required this.story});
 
   @override
   State<StoryPage> createState() => _StoryPageState();
 }
 
 class _StoryPageState extends State<StoryPage> {
-  final List<Character> characterList = [
-    Character()..name = "Mia"..tags = ["young", "girl", "strong"],
-    Character()..name = "Max"..tags = ["evil", "smart"],
-    Character()..name = "Ayano"..tags = ["friendly", "fat"],
-  ];
-  final List<String> backgroundList = ["future", "dystopia"];
   final List<String> roleList = [];
   final List<String> historyList = [];
-  final length = 5;
-  late http.Response httpResponse;
-  late String history;
+  late final int length;
   int page = 0;
-  String storyStr = '';
-
-  late Map<String, dynamic> text;
+  late String history;
+  late String storyStr;
+  late String characterStr;
+  late String backgroundStr;
+  late StoryText storyText;
+  bool _isReady = false;
+  bool _storyDone = false;
 
   @override
   void initState() {
     super.initState();
-    text = {'title': widget.story.title, 'story': ''};
+    length =  widget.story.length;
+    storyText = StoryText(title: widget.story.title, length:length);
 
     for (int i = 0; i < length; ++i) {
       if (i == 0) {
@@ -44,10 +40,32 @@ class _StoryPageState extends State<StoryPage> {
         roleList.add("Make the next part of the story, given the previous stories.");
       }
     }
+
+    if(widget.story.characterList.isEmpty) {
+      characterStr = '';
+    } else {
+      characterStr = 'Main Characters are ';
+      for (Character ch in widget.story.characterList) {
+        characterStr =
+        "$characterStr'${ch.name}' whose attributes are '${ch.tags.join(
+            ", ")}' and ";
+      }
+      characterStr = "${characterStr}it's all.";
+    }
+
+    if(widget.story.backgroundList.isEmpty){
+      backgroundStr = '';
+    } else {
+      backgroundStr = "Background attributes of the stories are '${widget.story
+          .backgroundList.join(", ")}'.";
+    }
+
     _initStory();
   }
 
-  _initStory() async {
+  Future <void> _initStory() async {
+    setState(() => _isReady = false);
+    late http.Response httpResponse;
     try {
       httpResponse = await _makeStory(roleList[page]);
     } catch (e) {
@@ -66,14 +84,14 @@ class _StoryPageState extends State<StoryPage> {
       print(httpResponse.statusCode);
     }
     ++page;
+    setState(() => _isReady = true);
   }
 
   void _nextStory(String choice) async {
-    if (page == length) {
-      return;
-    }
-    history = "${history} The user's choice was ${choice}. ";
+    setState(() => _isReady = false);
+    history = "$history The user's choice was $choice. ";
     historyList.add(history);
+    late http.Response httpResponse;
     try {
       httpResponse = await _makeStory(roleList[page]);
     } catch (e) {
@@ -92,18 +110,16 @@ class _StoryPageState extends State<StoryPage> {
       print(httpResponse.statusCode);
     }
     ++page;
+    setState(() => _isReady = true);
+    if(page >= length){
+      historyList.add(history);
+      storyText.story = historyList;
+      setState(() => _storyDone = true);
+    }
   }
 
   Future<http.Response> _makeStory(String role) {
-    String characterStr = 'Characters are ';
-    for (Character ch in widget.story.characterList) {
-      characterStr =
-      "$characterStr'${ch.name}' whose attributes are '${ch.tags.join(", ")}' and ";
-    }
-    characterStr = "${characterStr}it's all.";
-    String backgroundStr =
-        "Background attributes of the stories are '${widget.story.backgroundList.join(", ")}'.";
-    final historyStr = historyList.join(' ');
+    String historyStr = historyList.join(' ');
 
     return http.post(Uri.parse(uri),
         headers: {
@@ -116,17 +132,18 @@ class _StoryPageState extends State<StoryPage> {
             {
               "role": "user",
               "content":
-              "The previous stories were ${historyStr}. ${role}",
+                "The previous stories were $historyStr. $role",
             },
             {
               "role": "system",
               "content":
-              "You are a storyteller who creates short interactive fairy tales, and the fairy tale you will create will be divided into parts. "
-                  "You should give two options to user about the main character's next action after each part, and continue the story given the context. "
-                  "${characterStr} ${backgroundStr} Don't say any words without story.",
+                "You are a storyteller who creates interactive story, and the story you will create will be divided into parts. "
+                "You should give three options to user about the main character's next action after each part, and continue the story given the context. "
+                "$characterStr $backgroundStr Don't say any words without story.",
             },
           ]
-        }));
+        })
+    );
   }
 
   @override
@@ -135,59 +152,71 @@ class _StoryPageState extends State<StoryPage> {
       appBar: AppBar(
         title: Text(widget.story.title),
       ),
-      body: Column(
-        children: [
-
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(15.0),
-              width: double.infinity,
-              alignment: Alignment.topCenter,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black,
-                  width: 2.0,
-                ),
-              ),
-              child: SingleChildScrollView(
-                child: Text(
-                  storyStr,
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      body: !_isReady
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
               children: [
-                ElevatedButton(
-                  onPressed: () => _nextStory('A'),
-                  child: Text('Option 1'),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(15.0),
+                    width: double.infinity,
+                    alignment: Alignment.topCenter,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 2.0,
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Text(storyStr,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
                 ),
-                ElevatedButton(
-                  onPressed: () => _nextStory('B'),
-                  child: Text('Option 2'),
+
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: _userButton(),
                 ),
               ],
-            ),
           ),
+    );
+  }
 
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                text['story'] = historyList;
-                widget.updatestoryText(text);
-                Navigator.pop(context);
-              },
-              child: Text('Save'),
-            ),
+  Widget _userButton(){
+    if(!_storyDone){
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          TextButton(
+            onPressed: () => _nextStory('A'),
+            child: const Text('Option 1'),
+          ),
+          ElevatedButton(
+            onPressed: () => _nextStory('B'),
+            child: const Text('Option 2'),
+          ),
+          ElevatedButton(
+            onPressed: () => _nextStory('C'),
+            child: const Text('Option 3'),
           ),
         ],
-      ),
-    );
+      );
+    } else {
+      return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            TextButton(
+                onPressed: () => Navigator.pop(context, storyText),
+                child: const Text("Save")
+            ),
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel")
+            ),
+          ],
+      );
+    }
   }
 }
