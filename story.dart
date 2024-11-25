@@ -132,14 +132,14 @@ class _StoryPageState extends State<StoryPage> {
             {
               "role": "user",
               "content":
-                "The previous stories were $historyStr. $role",
+              "The previous stories were $historyStr. $role",
             },
             {
               "role": "system",
               "content":
-                "You are a storyteller who creates interactive story, and the story you will create will be divided into parts. "
-                "You should give three options to user about the main character's next action after each part, and continue the story given the context. "
-                "$characterStr $backgroundStr Don't say any words without story.",
+              "You are a storyteller who creates interactive story, and the story you will create will be divided into parts. "
+                  "You should give three options to user about the main character's next action after each part, and continue the story given the context. "
+                  "$characterStr $backgroundStr Don't say any words without story.",
             },
           ]
         })
@@ -151,36 +151,69 @@ class _StoryPageState extends State<StoryPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.story.title),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            goBack2(context);
+          },
+        ),
       ),
       body: !_isReady
           ? const Center(child: CircularProgressIndicator())
           : Column(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(15.0),
-                    width: double.infinity,
-                    alignment: Alignment.topCenter,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 2.0,
-                      ),
-                    ),
-                    child: SingleChildScrollView(
-                      child: Text(storyStr,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(15.0),
+              width: double.infinity,
+              alignment: Alignment.topCenter,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.black,
+                  width: 2.0,
                 ),
-
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: _userButton(),
+              ),
+              child: SingleChildScrollView(
+                child: Text(storyStr,
+                  style: const TextStyle(fontSize: 16),
                 ),
-              ],
+              ),
+            ),
           ),
+
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: _userButton(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void goBack2(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            title: Text('Do you want to exit?'),
+            content: Text('Your settings will not be saved.'),
+            actions: [
+              TextButton(
+                  onPressed:(){
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: Text('yes')
+              ),
+              TextButton(
+                  onPressed: (){
+                    Navigator.pop(context);
+                  },
+                  child: Text('no')
+              )
+            ],
+          );
+        }
     );
   }
 
@@ -205,17 +238,17 @@ class _StoryPageState extends State<StoryPage> {
       );
     } else {
       return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            TextButton(
-                onPressed: () => Navigator.pop(context, storyText),
-                child: const Text("Save")
-            ),
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel")
-            ),
-          ],
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, storyText),
+              child: const Text("Save")
+          ),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")
+          ),
+        ],
       );
     }
   }
