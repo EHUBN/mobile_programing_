@@ -251,7 +251,7 @@ class _StorySettingState extends State<StorySetting> {
         context: context,
         builder: (context){
           return AlertDialog(
-            title: Text('Do you want to exit?'),
+            title: Text('Do you want to go back?'),
             content: Text('Your settings will not be saved.'),
             actions: [
               TextButton(
