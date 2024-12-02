@@ -115,8 +115,8 @@ class _StoryPageState extends State<StoryPage> {
       historyStr = "$historyStr $tempHistory";
     }
     late http.Response httpResponse;
-     try {
-       httpResponse = await http.post(Uri.parse(uri),
+    try {
+      httpResponse = await http.post(Uri.parse(uri),
           headers: {
             'Authorization': 'Bearer $apiKey',
             'Content-Type': 'application/json',
@@ -127,44 +127,44 @@ class _StoryPageState extends State<StoryPage> {
               {
                 "role": "user",
                 "content":
-                  "The previous stories were $historyStr. $role",
+                "The previous stories were $historyStr. $role",
               },
               {
                 "role": "system",
                 "content":
-                  "You are a storyteller who creates interactive story, and the story you will create will be divided into parts. "
-                  "You should give three options to user about the main character's next action after each part, and continue the story given the context. "
-                  "$characterStr $backgroundStr Don't say any words without story.",
+                "You are a storyteller who creates interactive story, and the story you will create will be divided into parts. "
+                    "You should give three options to user about the main character's next action after each part, and continue the story given the context. "
+                    "$characterStr $backgroundStr Don't say any words without story.",
               },
             ]
           })
-       ).timeout(const Duration(seconds: 5),
-           onTimeout: () => throw TimeoutException('timeout'));
-     } catch (e) {
-       late bool willRetry;
-       if(choice == null) {
-         willRetry =  await _firstTimeoutDialog() ?? false;
-       } else {
-         willRetry =  await _timeoutDialog() ?? false;
-       }
-       if(willRetry){
-         return "retry";
-       } else {
-         return "back";
-       }
-     }
-     if (httpResponse.statusCode == 200) {
-       try {
-         var data = jsonDecode(httpResponse.body);
-         String output = data['choices'][0]['message']['content'];
-         return output;
-       } catch (e) {
-         return null;
-       }
-     } else {
-       print(httpResponse.statusCode);
-       return null;
-     }
+      ).timeout(const Duration(seconds: 5),
+          onTimeout: () => throw TimeoutException('timeout'));
+    } catch (e) {
+      late bool willRetry;
+      if(choice == null) {
+        willRetry =  await _firstTimeoutDialog() ?? false;
+      } else {
+        willRetry =  await _timeoutDialog() ?? false;
+      }
+      if(willRetry){
+        return "retry";
+      } else {
+        return "back";
+      }
+    }
+    if (httpResponse.statusCode == 200) {
+      try {
+        var data = jsonDecode(httpResponse.body);
+        String output = data['choices'][0]['message']['content'];
+        return output;
+      } catch (e) {
+        return null;
+      }
+    } else {
+      print(httpResponse.statusCode);
+      return null;
+    }
   }
 
   @override
@@ -187,32 +187,32 @@ class _StoryPageState extends State<StoryPage> {
         body: !_isReady
             ? const Center(child: CircularProgressIndicator())
             : Column(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(15.0),
-                      width: double.infinity,
-                      alignment: Alignment.topCenter,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.black,
-                          width: 2.0,
-                        ),
-                      ),
-                      child: SingleChildScrollView(
-                        child: Text(storyStr,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(15.0),
+                width: double.infinity,
+                alignment: Alignment.topCenter,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 2.0,
                   ),
-
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _userButton(),
+                ),
+                child: SingleChildScrollView(
+                  child: Text(storyStr,
+                    style: const TextStyle(fontSize: 16),
                   ),
-                ],
+                ),
+              ),
             ),
+
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: _userButton(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -254,8 +254,8 @@ class _StoryPageState extends State<StoryPage> {
                   child: const Text("Retry")
               ),
               TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text("Go back to Home"),
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Go back to Home"),
               )
             ],
           );
@@ -299,18 +299,49 @@ class _StoryPageState extends State<StoryPage> {
       );
     } else {
       return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            TextButton(
-                onPressed: () => Navigator.pop(context, storyText),
-                child: const Text("Save")
-            ),
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel")
-            ),
-          ],
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          TextButton(
+              onPressed: () {
+                storyName(context);
+              },
+              child: const Text("Save")
+          ),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")
+          ),
+        ],
       );
     }
+  }
+  void storyName(BuildContext context) async {
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Write story name'),
+          content: Form(
+            child: TextFormField(
+              onChanged: (value) {
+                setState(() {
+                  storyText.realTitle = value;
+                });
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: (){
+                Navigator.pop(context);
+                Navigator.pop(context, storyText, );
+              },
+              child:Text('save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
