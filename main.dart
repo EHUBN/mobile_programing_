@@ -22,26 +22,30 @@ const uri = 'https://api.groq.com/openai/v1/chat/completions';
 
 class Story {
   late String title;
+  String? realTitle;
   int length = 3;
   final List<Character> characterList;
   final List<String> backgroundList;
 
-  Story() : title = '', characterList = [], backgroundList = [];
+  Story() : title = '', realTitle = '', characterList = [], backgroundList = [];
   Story.withStory({required Story s}):
         title = s.title,
         length = s.length,
+        realTitle = s.realTitle,
         characterList = List.from(s.characterList),
         backgroundList = List.from(s.backgroundList);
 
   Story.withParams({
     required this.title,
     required this.length,
+    required this.realTitle,
     required this.characterList,
     required this.backgroundList
   });
 
   Map<String,dynamic> toJson() => <String, dynamic>{
     "title": title,
+    'realTitle': realTitle,
     "length": length,
     "characters": characterList,
     "backgrounds": backgroundList
@@ -66,21 +70,18 @@ class Character {
 }
 
 class StoryText {
+  String? realTitle;
   final String title;
   final int length;
   late final List<String> story;
 
-  StoryText({required this.title, required this.length});
-  StoryText.withParams({required this.title, required this.length, required this.story});
+  StoryText({required this.title, required this.length, required this.realTitle});
+  StoryText.withParams({required this.title, required this.length, required this.story, required this.realTitle});
 
   Map<String,dynamic> toJson() => <String, dynamic>{
+    'realTitle': realTitle,
     "title": title,
     "length": length,
     "story": story,
   };
 }
-
-
-
-
-
