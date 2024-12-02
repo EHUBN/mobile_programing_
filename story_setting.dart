@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -419,7 +421,8 @@ class AddTag extends StatefulWidget {
 class _AddTagState extends State<AddTag> {
   late String tempTag;
   bool _isFit = true;
-  bool _buttonEnabled = true;
+  bool _isLoading = false;
+  bool _timeout = false;
 
   final GlobalKey<FormState> _tagKey = GlobalKey<FormState>();
 
@@ -439,7 +442,7 @@ class _AddTagState extends State<AddTag> {
                     children: [
                       TextButton(
                           onPressed: () {
-                            if(_buttonEnabled){
+                            if(!_isLoading){
                               _saveTag(context);
                             }
                           },
@@ -447,7 +450,7 @@ class _AddTagState extends State<AddTag> {
                       ),
                       TextButton(
                           onPressed: () {
-                            if(_buttonEnabled){
+                            if(!_isLoading){
                               Navigator.pop(context);
                             }
                           },
@@ -475,32 +478,46 @@ class _AddTagState extends State<AddTag> {
           } else if (widget.ch.tags
               .map((String tag)=>tag.toLowerCase()).contains(input.toLowerCase())) {
             return "Duplicate Tags not allowed";
+          } else if(_timeout) {
+            return "Check your WiFi connection";
           } else if (!_isFit) {
             return "Choose more appropriate tag";
           } else {
             return null;
           }
         },
-        decoration: const InputDecoration(
-            helperText: "Llama will check your tag"
-        ),
+        decoration: InputDecoration(
+            helperText: "Llama will check your tag",
+            suffix: _isLoading
+                ? const SizedBox(
+                    height: 20.0,
+                    width: 20.0,
+                    child: CircularProgressIndicator(
+                      color: Colors.grey,
+                      strokeWidth: 3.0,
+                    ),
+                  )
+                : const SizedBox(),
+          ),
       ),
     );
   }
 
   Future<void> _saveTag(context) async {
-    setState(() => _buttonEnabled = false);
+    setState(() => _isLoading = true);
     if (_tagKey.currentState!.validate()) {
-      _isFit = await _aiCheck(tempTag);
+      await _aiCheck(tempTag);
       if(_tagKey.currentState!.validate()) {
         _tagKey.currentState!.save();
       }
-      _isFit = true;
     }
-    setState(() => _buttonEnabled = true);
+    _isFit = true;
+    _timeout = false;
+    setState(() => _isLoading = false);
   }
 
-  Future<bool> _aiCheck(String input) async{
+  Future<void> _aiCheck(String input) async{
+    _isFit = false;
     late http.Response httpResponse;
     try {
       httpResponse = await http.post(Uri.parse(uri),
@@ -521,9 +538,13 @@ class _AddTagState extends State<AddTag> {
               }
             ]
           })
+      ).timeout(const Duration(seconds: 5),
+          onTimeout: () => throw TimeoutException('timeout'),
       );
     } catch (e) {
       print(e);
+      _timeout = true;
+      return;
     }
     if (httpResponse.statusCode == 200){
       try {
@@ -531,9 +552,10 @@ class _AddTagState extends State<AddTag> {
         String output = data['choices'][0]['message']['content'];
         print(output);
         if (output == 'y') {
-          return true;
+          _isFit = true;
+          return;
         } else {
-          return false;
+          return;
         }
       } catch (e) {
         print(e);
@@ -541,7 +563,7 @@ class _AddTagState extends State<AddTag> {
     } else {
       print(httpResponse.statusCode);
     }
-    return false;
+    return;
   }
 }
 
@@ -558,7 +580,8 @@ class AddBackground extends StatefulWidget {
 class _AddBackgroundState extends State<AddBackground> {
   late String tempBg;
   bool _isFit = true;
-  bool _buttonEnabled = true;
+  bool _timeout = false;
+  bool _isLoading = false;
 
   final GlobalKey<FormState> _bgKey = GlobalKey<FormState>();
 
@@ -577,12 +600,12 @@ class _AddBackgroundState extends State<AddBackground> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       TextButton(
-                          onPressed: _buttonEnabled ? _saveBg : null,
+                          onPressed: _isLoading ? null : _saveBg,
                           child: const Text("save")
                       ),
                       TextButton(
                           onPressed: () {
-                            if(_buttonEnabled){
+                            if(!_isLoading){
                               Navigator.pop(context);
                             }
                           },
@@ -596,15 +619,16 @@ class _AddBackgroundState extends State<AddBackground> {
   }
 
   void _saveBg() async {
-    setState(() => _buttonEnabled = false);
+    setState(() => _isLoading = true);
     if (_bgKey.currentState!.validate()) {
-      _isFit = await _aiCheck(tempBg);
+      await _aiCheck(tempBg);
       if(_bgKey.currentState!.validate()) {
         _bgKey.currentState!.save();
       }
-      _isFit = true;
     }
-    setState(() => _buttonEnabled = true);
+    _isFit = true;
+    _timeout = false;
+    setState(() => _isLoading = false);
   }
 
   Widget _bgField() {
@@ -621,20 +645,33 @@ class _AddBackgroundState extends State<AddBackground> {
           } else if (widget.story.backgroundList
               .map((String tag) => tag.toLowerCase()).contains(input.toLowerCase())) {
             return "Duplicate Tags not allowed";
+          } else if(_timeout) {
+            return "Check your Wifi Connection";
           } else if (!_isFit) {
             return "Choose more appropriate tag";
           } else {
             return null;
           }
         },
-        decoration: const InputDecoration(
-            helperText: "Llama will check your tag"
+        decoration:  InputDecoration(
+            helperText: "Llama will check your tag",
+            suffix: _isLoading
+                ? const SizedBox(
+                    height: 20.0,
+                    width: 20.0,
+                    child: CircularProgressIndicator(
+                      color: Colors.grey,
+                      strokeWidth: 3.0,
+                    ),
+                  )
+                : const SizedBox(),
         ),
       ),
     );
   }
 
-  Future<bool> _aiCheck(String input) async{
+  Future<void> _aiCheck(String input) async{
+    _isFit = false;
     late http.Response httpResponse;
     try {
       httpResponse = await http.post(Uri.parse(uri),
@@ -655,10 +692,12 @@ class _AddBackgroundState extends State<AddBackground> {
               }
             ]
           })
-      );
+      ).timeout(const Duration(seconds: 5),
+          onTimeout: () => throw TimeoutException('timeout'));
     } catch (e) {
+      _timeout = true;
       print(e);
-      return false;
+      return;
     }
     if (httpResponse.statusCode == 200){
       try {
@@ -666,16 +705,18 @@ class _AddBackgroundState extends State<AddBackground> {
         String output = data['choices'][0]['message']['content'];
         print(output);
         if (output == 'y') {
-          return true;
+          _isFit = true;
+          return;
         } else {
-          return false;
+          return;
         }
       } catch (e) {
         print(e);
       }
     } else {
+      _timeout = true;
       print(httpResponse.statusCode);
     }
-    return false;
+    return;
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -65,85 +67,104 @@ class _StoryPageState extends State<StoryPage> {
 
   Future <void> _initStory() async {
     setState(() => _isReady = false);
-    late http.Response httpResponse;
-    try {
-      httpResponse = await _makeStory(roleList[page]);
-    } catch (e) {
-      print(e);
-    }
-    if (httpResponse.statusCode == 200) {
-      try {
-        var data = jsonDecode(httpResponse.body);
-        String output = data['choices'][0]['message']['content'];
-        history = output;
-        setState(() => storyStr = output);
-      } catch (e) {
-        print(e);
-      }
+    String? output;
+    output = await _makeStory(roleList[page], null);
+    if(output == null || output == 'back') {
+      Navigator.pop(context);
     } else {
-      print(httpResponse.statusCode);
+      history = output;
+      setState(() {
+        storyStr = output!;
+        _isReady = true;
+      });
+      ++page;
     }
-    ++page;
-    setState(() => _isReady = true);
   }
 
   void _nextStory(String choice) async {
     setState(() => _isReady = false);
-    history = "$history The user's choice was $choice. ";
-    historyList.add(history);
-    late http.Response httpResponse;
-    try {
-      httpResponse = await _makeStory(roleList[page]);
-    } catch (e) {
-      print(e);
-    }
-    if (httpResponse.statusCode == 200) {
-      try {
-        var data = jsonDecode(httpResponse.body);
-        String output = data['choices'][0]['message']['content'];
-        history = output;
-        setState(() => storyStr = output);
-      } catch (e) {
-        print(e);
-      }
-    } else {
-      print(httpResponse.statusCode);
-    }
-    ++page;
-    setState(() => _isReady = true);
-    if(page >= length){
+    String? output = await _makeStory(roleList[page], choice);
+    if(output == null || output == 'retry') {
+      setState(() => _isReady = true);
+      return;
+    } else if (output == 'back'){
+      Navigator.pop(context);
+      return;
+    } else  {
+      history = "$history The user's choice was $choice. ";
       historyList.add(history);
-      storyText.story = historyList;
-      setState(() => _storyDone = true);
+      history = output;
+      setState(() {
+        storyStr = output;
+        _isReady = true;
+      });
+      ++page;
+      if(page >= length){
+        historyList.add(history);
+        storyText.story = historyList;
+        setState(() => _storyDone = true);
+      }
     }
   }
 
-  Future<http.Response> _makeStory(String role) {
+  Future<String?> _makeStory(String role, String? choice) async {
     String historyStr = historyList.join(' ');
 
-    return http.post(Uri.parse(uri),
-        headers: {
-          'Authorization': 'Bearer $apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          "model": "llama3-8b-8192",
-          "messages": [
-            {
-              "role": "user",
-              "content":
-                "The previous stories were $historyStr. $role",
-            },
-            {
-              "role": "system",
-              "content":
-                "You are a storyteller who creates interactive story, and the story you will create will be divided into parts. "
-                "You should give three options to user about the main character's next action after each part, and continue the story given the context. "
-                "$characterStr $backgroundStr Don't say any words without story.",
-            },
-          ]
-        })
-    );
+    if(choice != null) {
+      String tempHistory = "$history The user's choice was $choice. ";
+      historyStr = "$historyStr $tempHistory";
+    }
+    late http.Response httpResponse;
+     try {
+       httpResponse = await http.post(Uri.parse(uri),
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            "model": "llama3-8b-8192",
+            "messages": [
+              {
+                "role": "user",
+                "content":
+                  "The previous stories were $historyStr. $role",
+              },
+              {
+                "role": "system",
+                "content":
+                  "You are a storyteller who creates interactive story, and the story you will create will be divided into parts. "
+                  "You should give three options to user about the main character's next action after each part, and continue the story given the context. "
+                  "$characterStr $backgroundStr Don't say any words without story.",
+              },
+            ]
+          })
+       ).timeout(const Duration(seconds: 5),
+           onTimeout: () => throw TimeoutException('timeout'));
+     } catch (e) {
+       late bool willRetry;
+       if(choice == null) {
+         willRetry =  await _firstTimeoutDialog() ?? false;
+       } else {
+         willRetry =  await _timeoutDialog() ?? false;
+       }
+       if(willRetry){
+         return "retry";
+       } else {
+         return "back";
+       }
+     }
+     if (httpResponse.statusCode == 200) {
+       try {
+         var data = jsonDecode(httpResponse.body);
+         String output = data['choices'][0]['message']['content'];
+         return output;
+       } catch (e) {
+         return null;
+       }
+     } else {
+       print(httpResponse.statusCode);
+       return null;
+     }
   }
 
   @override
@@ -219,6 +240,42 @@ class _StoryPageState extends State<StoryPage> {
           );
         }
     );
+  }
+
+  Future<bool?> _timeoutDialog() {
+    return showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            title: const Text("Check your WiFi Connection"),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text("Retry")
+              ),
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text("Go back to Home"),
+              )
+            ],
+          );
+        });
+  }
+
+  Future<bool?> _firstTimeoutDialog() {
+    return showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            title: const Text("Check your WiFi Connection"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Go back to Home"),
+              )
+            ],
+          );
+        });
   }
 
   Widget _userButton(){
