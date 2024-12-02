@@ -127,24 +127,43 @@ class _StoryMenuState extends State<StoryMenu> {
                                 ),
                                 Center(
                                   child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      _savedStories[index].title,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        fontStyle: FontStyle.italic,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.black38,
-                                            blurRadius: 4,
-                                            offset: Offset(2, 2),
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            _savedStories[index].realTitle ?? 'd',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              fontStyle: FontStyle.italic,
+                                              shadows: [
+                                                Shadow(
+                                                  color: Colors.black38,
+                                                  blurRadius: 4,
+                                                  offset: Offset(2, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          Text(_savedStories[index].title,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontStyle: FontStyle.italic,
+                                              shadows: [
+                                                Shadow(
+                                                  color: Colors.black38,
+                                                  blurRadius: 4,
+                                                  offset: Offset(2, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            textAlign: TextAlign.center,
                                           ),
                                         ],
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
+                                      )
                                   ),
                                 ),
                               ],
@@ -309,6 +328,7 @@ class _StoryMenuState extends State<StoryMenu> {
         _templates = jsonList
             .map((story) => Story.withParams(
           title: story['title'],
+          realTitle: story['realTitle'],
           length: story['length'],
           characterList: story['characters']
               .map((ch) => Character.withParams(
@@ -336,6 +356,7 @@ class _StoryMenuState extends State<StoryMenu> {
         List<dynamic> jsonList = json.decode(text);
         _savedStories = jsonList
             .map((story) => StoryText.withParams(
+          realTitle: story['realTitle'],
           title: story['title'],
           length: story['length'],
           story: story['story'].cast<String>(),
