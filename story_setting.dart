@@ -12,63 +12,109 @@ class StorySetting extends StatefulWidget {
 }
 
 class _StorySettingState extends State<StorySetting> {
+  late final Story tempStory;
   late int _storyLength;
 
   @override
   void initState(){
     super.initState();
-    _storyLength = widget.story.length;
+    tempStory = Story.withStory(s:widget.story);
+    _storyLength = tempStory.length;
   }
 
   final GlobalKey<FormState> _titleKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: const Text("Story Setting"),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            goBack1(context);
-          },
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("  Title"),
-            _titleField(),
-            const SizedBox(height: 15.0),
-            const Text("  Length of Story"),
-            _radioButtons(),
-            const SizedBox(height: 15.0),
-            const SizedBox(height: 15.0),
-            const Text("  Characters"),
-            const SizedBox(height: 25.0),
-            _showCharacters(),
-            const Text("  Backgrounds"),
-            const SizedBox(height: 25.0),
-            _showBackgrounds(),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextButton(
-              onPressed: () => _checkTitle(context),
-              child: const Text("save")
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if(didPop){
+          return;
+        }
+        bool willPop = await _askPop(context) ?? false;
+        if(willPop && context.mounted) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          appBar: AppBar(
+            title: const Text("Story Setting"),
           ),
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("cancel")
+          body: SingleChildScrollView(
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("  Title"),
+                  _titleField(),
+                  const SizedBox(height: 15.0),
+                  const Text("  Length of Story"),
+                  _radioButtons(),
+                  const SizedBox(height: 15.0),
+                  const Text("  Characters"),
+                  const SizedBox(height: 25.0),
+                  _showCharacters(),
+                  Center(
+                    child: IconButton(
+                        onPressed: _addCharacter,
+                        icon: const Icon(Icons.add)
+                    ),
+                  ),
+                  const SizedBox(height: 25.0),
+                  const Text("  Backgrounds/Genres"),
+                  const SizedBox(height: 25.0),
+                  _showBackgrounds(),
+                  Center(
+                    child: IconButton(
+                        onPressed: _addBackground,
+                        icon: const Icon(Icons.add)
+                    ),
+                  ),
+                  const SizedBox(height: 25.0),
+                ],
+            ),
           ),
-        ],
+          bottomNavigationBar: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                  onPressed: () => _checkTitle(context),
+                  child: const Text("save")
+              ),
+              TextButton(
+                  onPressed: () async {
+                    bool willPop = await _askPop(context) ?? false;
+                    if(willPop && context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text("cancel")
+              ),
+            ],
+          ),
       ),
     );
+  }
+
+  Future<bool?> _askPop(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Do you want to go back?'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('yes')
+              ),
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('no')
+              )
+            ],
+          );
+        });
   }
 
   Widget _titleField(){
@@ -77,8 +123,8 @@ class _StorySettingState extends State<StorySetting> {
       child: Form(
           key: _titleKey,
           child: TextFormField(
-            initialValue: widget.story.title,
-            onSaved: (input) => widget.story.title = input!,
+            initialValue: tempStory.title,
+            onSaved: (input) => tempStory.title = input!,
             validator: (input) {
               if(input!.isEmpty){
                 return "Title cannot be empty";
@@ -99,8 +145,8 @@ class _StorySettingState extends State<StorySetting> {
   void _checkTitle(BuildContext context){
     if(_titleKey.currentState!.validate()){
       _titleKey.currentState!.save();
-      widget.story.length = _storyLength;
-      Navigator.pop(context, widget.story);
+      tempStory.length = _storyLength;
+      Navigator.pop(context, tempStory);
     }
   }
 
@@ -142,7 +188,7 @@ class _StorySettingState extends State<StorySetting> {
   }
 
   void _addCharacter() async {
-    if (widget.story.characterList.length >= 3) {
+    if (tempStory.characterList.length >= 3) {
       showDialog(
           context: context,
           builder: (context) {
@@ -156,55 +202,46 @@ class _StorySettingState extends State<StorySetting> {
       final Character? tempCh = await showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => AddCharacter(story: widget.story, ch: Character())
+          builder: (context) => AddCharacter(story: tempStory, ch: Character())
       );
       if(tempCh != null){
-        setState(() => widget.story.characterList.add(tempCh));
+        setState(() => tempStory.characterList.add(tempCh));
       }
     }
   }
 
-  void _editCh(Character ch) async{
-    Character? tempCh = await showDialog(
-        context: context,
-        builder: (context) => AddCharacter(story: widget.story, ch: ch)
-    );
-    if(tempCh != null){
-      setState(() => ch = tempCh);
-    }
-  }
-
   Widget _showCharacters() {
-    var widgets = widget.story.characterList.map((ch) => chWidget(ch)).toList();
-    widgets.add(
-        IconButton(
-            onPressed: _addCharacter,
-            icon: const Icon(Icons.add)
-        )
-    );
-    return ListView(
+    return ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        children: widgets
-    );
-  }
-
-  Widget chWidget(Character ch) {
-    return Container(
-        padding: const EdgeInsets.all(5.0),
-        child: ListTile(
-          title: Text(ch.name),
-          onTap: () => _editCh(ch),
-          trailing: IconButton(
-            onPressed: () => setState(() => widget.story.characterList.remove(ch)),
-            icon: const Icon(Icons.delete),
-          ),
-        )
-    );
+        itemCount: tempStory.characterList.length,
+        itemBuilder: (context, idx) {
+          Character ch = tempStory.characterList[idx];
+          return Container(
+              padding: const EdgeInsets.all(5.0),
+              child: ListTile(
+                title: Text(ch.name),
+                onTap: () async {
+                  Character? tempCh = await showDialog(
+                      context: context,
+                      builder: (context) => AddCharacter(story: tempStory, ch: ch)
+                  );
+                  if (tempCh != null) {
+                    setState(() => tempStory.characterList[idx] = tempCh);
+                  }
+                },
+                trailing: IconButton(
+                  onPressed: () =>
+                      setState(() => tempStory.characterList.remove(ch)),
+                  icon: const Icon(Icons.delete),
+                ),
+              )
+          );
+        });
   }
 
   void _addBackground() async {
-    if (widget.story.backgroundList.length >= 3) {
+    if (tempStory.backgroundList.length >= 3) {
       showDialog(
           context: context,
           builder: (context) {
@@ -216,61 +253,32 @@ class _StorySettingState extends State<StorySetting> {
     }else {
       final String? bg = await showDialog(
           context: context,
-          builder: (context) => AddBackground(story: widget.story)
+          builder: (context) => AddBackground(story: tempStory)
       );
       if(bg != null){
-        setState(() => widget.story.backgroundList.add(bg));
+        setState(() => tempStory.backgroundList.add(bg));
       }
     }
   }
 
   Widget _showBackgrounds() {
-    var widgets = widget.story.backgroundList.map((bg) => bgWidget(bg)).toList();
-    widgets
-        .add(
-        IconButton(onPressed: _addBackground, icon: const Icon(Icons.add)));
-    return ListView(
+    return ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        children: widgets
-    );
-  }
-
-  Widget bgWidget(String bg) {
-    return ListTile(
-        title: Text(bg),
-        trailing: IconButton(
-          onPressed: () => setState(() => widget.story.backgroundList.remove(bg)),
-          icon: const Icon(Icons.delete),
-        )
-    );
-  }
-
-  void goBack1(BuildContext context) {
-    showDialog(
-        context: context,
-        builder: (context){
-          return AlertDialog(
-            title: Text('Do you want to go back?'),
-            content: Text('Your settings will not be saved.'),
-            actions: [
-              TextButton(
-                  onPressed:(){
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  },
-                  child: Text('yes')
-              ),
-              TextButton(
-                  onPressed: (){
-                    Navigator.pop(context);
-                  },
-                  child: Text('no')
+        itemCount: tempStory.backgroundList.length,
+        itemBuilder: (context, idx) {
+          String bg = tempStory.backgroundList[idx];
+          return Container(
+              padding: const EdgeInsets.all(5.0),
+              child: ListTile(
+                title: Text(bg),
+                  trailing: IconButton(
+                    onPressed: () => setState(() => tempStory.backgroundList.remove(bg)),
+                    icon: const Icon(Icons.delete),
+                  )
               )
-            ],
           );
-        }
-    );
+        });
   }
 }
 
@@ -291,10 +299,7 @@ class _AddCharacterState extends State<AddCharacter> {
   @override
   void initState(){
     super.initState();
-    tempCh = Character.withParams(
-        name: widget.ch.name,
-        tags: widget.ch.tags
-    );
+    tempCh = Character.withCh(ch: widget.ch);
   }
   @override
   Widget build(BuildContext context) {
@@ -313,10 +318,12 @@ class _AddCharacterState extends State<AddCharacter> {
                 children: [
                   TextButton(
                       onPressed: () => _saveName(context),
-                      child: const Text("save")),
+                      child: const Text("save")
+                  ),
                   TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("cancel")),
+                      child: const Text("cancel")
+                  ),
                 ],
               )
             ],
@@ -333,23 +340,18 @@ class _AddCharacterState extends State<AddCharacter> {
             initialValue: tempCh.name,
             onSaved: (input) => tempCh.name = input!,
             validator: (input) {
-              if(input!.isEmpty){
+              if(input!.isEmpty) {
                 return "Name cannot be empty";
-              }
-              if(input.length > 15){
+              } else if(input.length > 15) {
                 return "Name is too long";
-              }
-              if(input[0] != input[0].toUpperCase()){
+              } else if(input[0] != input[0].toUpperCase()){
                 return "Name should start with upper case";
+              } else if(input != tempCh.name && widget.story.characterList
+                  .map((Character ch) => ch.name.toLowerCase()).contains(input.toLowerCase())){
+                return "Same name are not allowed";
+              } else {
+                return null;
               }
-              for (Character tempCh in widget.story.characterList) {
-                if (input == widget.ch.name){
-                  return null;
-                } else if (input == tempCh.name) {
-                  return "Same name are not allowed";
-                }
-              }
-              return null;
             },
             decoration: const InputDecoration(
                 border: OutlineInputBorder()
@@ -377,9 +379,7 @@ class _AddCharacterState extends State<AddCharacter> {
     return ListTile(
         title: Text(tag),
         trailing: IconButton(
-          onPressed: () => setState(() {
-            tempCh.tags.remove(tag);
-          }),
+          onPressed: () => setState(() => tempCh.tags.remove(tag)),
           icon: const Icon(Icons.delete),
         )
     );
@@ -472,7 +472,8 @@ class _AddTagState extends State<AddTag> {
             return "Tag cannot be empty";
           } else if (input.length > 15) {
             return "Tag is too long";
-          } else if (widget.ch.tags.contains(input)) {
+          } else if (widget.ch.tags
+              .map((String tag)=>tag.toLowerCase()).contains(input.toLowerCase())) {
             return "Duplicate Tags not allowed";
           } else if (!_isFit) {
             return "Choose more appropriate tag";
@@ -576,11 +577,7 @@ class _AddBackgroundState extends State<AddBackground> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       TextButton(
-                          onPressed: () {
-                            if(_buttonEnabled){
-                              _saveBg(context);
-                            }
-                          },
+                          onPressed: _buttonEnabled ? _saveBg : null,
                           child: const Text("save")
                       ),
                       TextButton(
@@ -598,7 +595,7 @@ class _AddBackgroundState extends State<AddBackground> {
     );
   }
 
-  void _saveBg(context) async {
+  void _saveBg() async {
     setState(() => _buttonEnabled = false);
     if (_bgKey.currentState!.validate()) {
       _isFit = await _aiCheck(tempBg);
@@ -621,7 +618,8 @@ class _AddBackgroundState extends State<AddBackground> {
             return "Tag cannot be Empty";
           } else if (input.length > 15) {
             return "Tag is too long";
-          } else if (widget.story.backgroundList.contains(input)) {
+          } else if (widget.story.backgroundList
+              .map((String tag) => tag.toLowerCase()).contains(input.toLowerCase())) {
             return "Duplicate Tags not allowed";
           } else if (!_isFit) {
             return "Choose more appropriate tag";
@@ -649,7 +647,7 @@ class _AddBackgroundState extends State<AddBackground> {
             "messages": [
               {
                 "role": "user",
-                "content": "Is word '${input}' suitable for describing fictional story book's background "
+                "content": "Is word '${input}' suitable for describing fictional story book's background?"
               },
               {
                 "role": "system",
@@ -660,6 +658,7 @@ class _AddBackgroundState extends State<AddBackground> {
       );
     } catch (e) {
       print(e);
+      return false;
     }
     if (httpResponse.statusCode == 200){
       try {

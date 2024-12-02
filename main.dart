@@ -27,6 +27,12 @@ class Story {
   final List<String> backgroundList;
 
   Story() : title = '', characterList = [], backgroundList = [];
+  Story.withStory({required Story s}):
+        title = s.title,
+        length = s.length,
+        characterList = List.from(s.characterList),
+        backgroundList = List.from(s.backgroundList);
+
   Story.withParams({
     required this.title,
     required this.length,
@@ -44,12 +50,14 @@ class Story {
 
 class Character {
   late String name;
-  final List<String> tags;
+  late final List<String> tags;
 
   Character(): name = '', tags = [];
+  Character.withCh({required Character ch}):
+        name = ch.name,
+        tags = List.from(ch.tags);
   Character.withParams({required this.name, required List<String> tags}):
         tags = List.from(tags);
-
 
   Map<String,dynamic> toJson() => <String, dynamic>{
     "name": name,
