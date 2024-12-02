@@ -31,7 +31,7 @@ class _StoryPageState extends State<StoryPage> {
   void initState() {
     super.initState();
     length =  widget.story.length;
-    storyText = StoryText(title: widget.story.title, length:length);
+    storyText = StoryText(title: widget.story.title, length:length, realTitle: widget.story.realTitle);
 
     for (int i = 0; i < length; ++i) {
       if (i == 0) {
