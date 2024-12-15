@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'main.dart';
@@ -40,7 +41,8 @@ class _StoryPageState extends State<StoryPage> {
       } else if (i == length - 1) {
         roleList.add("Make the ending part of the story which has no more options for user.");
       } else {
-        roleList.add("Make the next part of the story, given the previous stories.");
+        roleList.add("Make the next part of the story which is part ${i+1}, and story's total length is $length."
+            " Consider the previous stories and the position of the current part within the total length.");
       }
     }
 
@@ -53,7 +55,7 @@ class _StoryPageState extends State<StoryPage> {
         "$characterStr'${ch.name}' whose attributes are '${ch.tags.join(
             ", ")}' and ";
       }
-      characterStr = "${characterStr}it's all.";
+      characterStr = "${characterStr} it's all. All of the characters should appear at least once.";
     }
 
     if(widget.story.backgroundList.isEmpty){
@@ -126,12 +128,12 @@ class _StoryPageState extends State<StoryPage> {
               {
                 "role": "user",
                 "content":
-                "The previous stories were $historyStr. $role",
+                    "The previous stories were $historyStr. $role",
               },
               {
                 "role": "system",
                 "content":
-                "You are a storyteller who creates interactive story, and the story you will create will be divided into parts. "
+                    "You are a storyteller who creates interactive story, and the story you will create will be divided into parts. "
                     "You should give two options to user about the main character's next action after each part, and continue the story given the context. "
                     "$characterStr $backgroundStr Don't say any words without story.",
               },
@@ -367,13 +369,16 @@ class _StoryPageState extends State<StoryPage> {
                 onSaved: (value) {
                   Navigator.pop(context, value);
                 },
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9!@#\$%\^\&*\)\(+=._-]\s*')),
+                ],
                 decoration: const InputDecoration(
                   hintText: "Write a unique name for your story"
                 ),
                 validator: (input) {
                   if (input == null || input.isEmpty) {
                     return "Title cannot be empty";
-                  } else if (input.length > 15) {
+                  } else if (input.length > 20) {
                     return "Title is too long";
                   } else if (widget.savedStories.map((s)=>s.realTitle).contains(input)) {
                     return "Duplicate title not allowed";

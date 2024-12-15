@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'main.dart';
@@ -146,7 +147,7 @@ class _StorySettingState extends State<StorySetting> {
             validator: (input) {
               if(input == null || input.isEmpty){
                 return "Name cannot be empty";
-              } else if(input.length > 40) {
+              } else if(input.length > 20) {
                 return "Name is too long";
               } else if(input != widget.story.title &&
                   widget.templates.map((s) => s.title).contains(input)){
@@ -156,6 +157,9 @@ class _StorySettingState extends State<StorySetting> {
                 return null;
               }
             },
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9!@#\$%\^\&*\)\(+=._-]\s*')),
+            ],
             decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: "This is template's name, not story's name",
@@ -376,6 +380,9 @@ class _AddCharacterState extends State<AddCharacter> {
                 return null;
               }
             },
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9!@#\$%\^\&*\)\(+=._-]')),
+            ],
             decoration: const InputDecoration(
                 border: OutlineInputBorder()
             ),
@@ -507,6 +514,9 @@ class _AddTagState extends State<AddTag> {
             return null;
           }
         },
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9!@#\$%\^\&*\)\(+=._-]')),
+        ],
         decoration: InputDecoration(
             helperText: "Llama will check your tag",
             suffix: _isLoading
@@ -674,6 +684,9 @@ class _AddBackgroundState extends State<AddBackground> {
             return null;
           }
         },
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9!@#\$%\^\&*\)\(+=._-]')),
+        ],
         decoration:  InputDecoration(
             helperText: "Llama will check your tag",
             suffix: _isLoading

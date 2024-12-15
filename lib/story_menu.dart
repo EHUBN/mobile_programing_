@@ -214,6 +214,7 @@ class _StoryMenuState extends State<StoryMenu> {
                         color: Colors.white.withOpacity(0.4),
                       ),
                       child: ListView.builder(
+                        padding: const EdgeInsets.all(0),
                         itemCount: _templates.length,
                         controller: _templateScrollController,
                         itemBuilder: (context, index) {
@@ -270,8 +271,10 @@ class _StoryMenuState extends State<StoryMenu> {
                                   ),
                                 );
                                 if (text != null) {
-                                  setState(() => _savedStories.add(text));
-                                  _scrollStoryDown();
+                                  setState(() {
+                                    _savedStories.add(text);
+                                    _scrollStoryDown();
+                                  });
                                   _saveStories();
                                 }
                               },
@@ -290,8 +293,10 @@ class _StoryMenuState extends State<StoryMenu> {
                         ),
                       );
                       if (tempStory != null) {
-                        setState(() => _templates.add(tempStory));
-                        _scrollTemplateDown();
+                        setState(() {
+                          _templates.add(tempStory);
+                          _scrollTemplateDown();
+                        });
                         _saveTemplates();
                       }
                     },
